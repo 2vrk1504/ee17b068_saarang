@@ -14,7 +14,6 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
-import android.widget.ShareActionProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,7 +26,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Random;
-
 
 public class QuizActivity extends AppCompatActivity {
 
@@ -44,7 +42,8 @@ public class QuizActivity extends AppCompatActivity {
     TextView pointInc;
     int correctAnswer;
     int qno;
-    boolean clickState;
+    boolean share_clicked; //share button click state
+    boolean clickState; //Stores information if the answers for one question have already been clicked to avoid errors
     SCREEN s;
     int points;
     String difficulty;
@@ -61,17 +60,19 @@ public class QuizActivity extends AppCompatActivity {
             reset();
         else{
             s = (SCREEN) savedInstanceState.get("s");
+            share_clicked = savedInstanceState.getBoolean("share_clicked");
             if(s == SCREEN.question_screen) {
                 try{
                     difficulty = savedInstanceState.getString("diff");
                     points = savedInstanceState.getInt("points");
                     qno = savedInstanceState.getInt("qno");
+                    clickState = savedInstanceState.getBoolean("clickState");
                     questionSet = new JSONArray(savedInstanceState.getString("questionSet"));
                     initializeQuiz();
                     runQuiz();
                 }catch(Exception e){
-                        s = SCREEN.start_screen;
-                        reset();
+                    s = SCREEN.start_screen;
+                    reset();
                 }
             }
             else if(s==SCREEN.second_screen){
@@ -87,12 +88,12 @@ public class QuizActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         // Save UI state changes to the savedInstanceState.
-        // This bundle will be passed to onCreate if the process is
-        // killed and restarted.
         savedInstanceState.putSerializable("s", s);
         savedInstanceState.putString("diff", difficulty);
         savedInstanceState.putInt("points", points);
         savedInstanceState.putInt("qno", qno);
+        savedInstanceState.putBoolean("clickState", clickState);
+        savedInstanceState.putBoolean("share_clicked", share_clicked);
         try {
             savedInstanceState.putString("questionSet", questionSet.toString());
         }catch(Exception e){
@@ -216,8 +217,11 @@ public class QuizActivity extends AppCompatActivity {
                         if (questionSet.length() > (qno)) {
                             runQuiz();
                         }
-                        else
+                        else {
+                            //Change State
+                            s = SCREEN.result_screen;
                             printPoints();
+                        }
                     }
 
                     public void onTick(long millisUntilFinished){}
@@ -228,9 +232,6 @@ public class QuizActivity extends AppCompatActivity {
 
     //Method to Print points after all questions are done
     private void printPoints(){
-        //Change State
-        s = SCREEN.result_screen;
-
         //REMOVAL OF LAYOUTS
        try {
            ((ViewGroup) lin_layout_template.getParent()).removeView(lin_layout_template);
@@ -261,18 +262,24 @@ public class QuizActivity extends AppCompatActivity {
         share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Create the text message with a string
-                Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                sendIntent.putExtra(Intent.EXTRA_TEXT, textMessage);
-                sendIntent.setType("text/plain");
+                if (!share_clicked) {
+                    //has Share button been clicked
+                    share_clicked = true;
 
-                // Create intent to show the chooser dialog
-                Intent chooser = Intent.createChooser(sendIntent, "Share");
+                    // Create the text message with a string
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, textMessage);
+                    sendIntent.setType("text/plain");
 
-                // Verify that the intent will resolve to an activity
-                if (sendIntent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(chooser);
+                    // Create intent to show the chooser dialog
+                    Intent chooser = Intent.createChooser(sendIntent, "Share");
+
+                    // Verify that the intent will resolve to an activity
+                    if (sendIntent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(chooser);
+                        share_clicked = false;
+                    }
                 }
             }
         });
@@ -281,6 +288,7 @@ public class QuizActivity extends AppCompatActivity {
     //Method to setup initial screen
     private void reset(){
         s = SCREEN.start_screen; //Change State
+        share_clicked = false;
         points = 0;
         qno = 0;
         difficulty = "";
