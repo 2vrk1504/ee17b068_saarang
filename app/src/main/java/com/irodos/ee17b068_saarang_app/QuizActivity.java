@@ -48,7 +48,6 @@ public class QuizActivity extends AppCompatActivity {
     int points;
     String difficulty;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +59,7 @@ public class QuizActivity extends AppCompatActivity {
             reset();
         else{
             s = (SCREEN) savedInstanceState.get("s");
-            share_clicked = savedInstanceState.getBoolean("share_clicked");
+            share_clicked = false;
             if(s == SCREEN.question_screen) {
                 try{
                     difficulty = savedInstanceState.getString("diff");
@@ -85,6 +84,14 @@ public class QuizActivity extends AppCompatActivity {
         }
     }
     @Override
+    public void onResume(){
+        super.onResume();
+
+        //Set shared_clicked state to false, because 'Share chooser' was opened
+        share_clicked = false;
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         // Save UI state changes to the savedInstanceState.
@@ -93,7 +100,6 @@ public class QuizActivity extends AppCompatActivity {
         savedInstanceState.putInt("points", points);
         savedInstanceState.putInt("qno", qno);
         savedInstanceState.putBoolean("clickState", clickState);
-        savedInstanceState.putBoolean("share_clicked", share_clicked);
         try {
             savedInstanceState.putString("questionSet", questionSet.toString());
         }catch(Exception e){
@@ -278,7 +284,6 @@ public class QuizActivity extends AppCompatActivity {
                     // Verify that the intent will resolve to an activity
                     if (sendIntent.resolveActivity(getPackageManager()) != null) {
                         startActivity(chooser);
-                        share_clicked = false;
                     }
                 }
             }
