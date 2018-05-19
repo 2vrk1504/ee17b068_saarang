@@ -234,7 +234,7 @@ public class QuizActivity extends AppCompatActivity {
     private void printPoints(){
         //REMOVAL OF LAYOUTS
        try {
-           ((ViewGroup) lin_layout_template.getParent()).removeView(lin_layout_template);
+           (MainBox).removeView(lin_layout_template);
        }catch(Exception e){}
 
         //SETTING Layout for results
